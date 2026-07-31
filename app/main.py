@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI
 from app.api.webhook import router
+from app.api.dashboard import router as dashboard_router
 
 app = FastAPI(
     title="Alert Bridge",

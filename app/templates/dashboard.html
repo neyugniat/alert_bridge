@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>alert_bridge</title>
+<style>
+  :root {
+    --bg: #0a0e14;
+    --panel: #10151f;
+    --border: #1e2633;
+    --text: #c9d1d9;
+    --dim: #6b7688;
+    --green: #10e097;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --blue: #3b82f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  }
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  header .prompt { color: var(--green); font-weight: bold; font-size: 18px; }
+  header .prompt span { color: var(--text); }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--green);
+    border: 1px solid var(--green);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse { 50% { opacity: .35; } }
+  main { max-width: 1000px; margin: 0 auto; padding: 32px; }
+  .empty { color: var(--dim); text-align: center; padding: 80px 0; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .card-left { flex: 1; }
+  .name { font-size: 15px; font-weight: bold; margin-bottom: 4px; }
+  .summary { color: var(--dim); font-size: 13px; margin-bottom: 8px; }
+  .meta { font-size: 12px; color: var(--dim); }
+  .badges { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .sev-critical { color: var(--red); border-color: var(--red); }
+  .sev-warning { color: var(--amber); border-color: var(--amber); }
+  .sev-info, .sev-default { color: var(--blue); border-color: var(--blue); }
+  .status-firing { color: var(--red); border-color: var(--red); }
+  .status-resolved { color: var(--green); border-color: var(--green); }
+  .channel { color: var(--dim); border-color: var(--border); }
+  .timestamp { color: var(--dim); font-size: 11px; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="prompt">$ <span>alert_bridge / dashboard</span></div>
+    <div class="status"><span class="dot"></span> live</div>
+  </header>
+  <main id="alerts">
+    <div class="empty">waiting for alerts...</div>
+  </main>
+
+<script>
+async function fetchAlerts() {
+  try {
+    const res = await fetch('/api/alerts');
+    const alerts = await res.json();
+    render(alerts);
+  } catch (e) {
+    console.error('failed to fetch alerts', e);
+  }
+}
+
+function render(alerts) {
+  const container = document.getElementById('alerts');
+  if (!alerts.length) {
+    container.innerHTML = '<div class="empty">waiting for alerts...</div>';
+    return;
+  }
+  container.innerHTML = alerts.map(a => `
+    <div class="card">
+      <div class="card-left">
+        <div class="name">${a.alertname}</div>
+        <div class="summary">${a.summary || 'no summary provided'}</div>
+        <div class="timestamp">${new Date(a.received_at).toLocaleString()}</div>
+      </div>
+      <div class="badges">
+        <span class="badge status-${a.status}">${a.status}</span>
+        <span class="badge sev-${a.severity}">${a.severity}</span>
+        ${a.channels.map(c => `<span class="badge channel">${c}</span>`).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+fetchAlerts();
+setInterval(fetchAlerts, 3000);
+</script>
+</body>
+</html>
