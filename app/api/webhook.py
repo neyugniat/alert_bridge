@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
+from loguru import logger
+
+from app.models import AlertmanagerWebhook
+from app.dispatch import handle_webhook
 
 router = APIRouter()
 
+
 @router.post("/webhook")
-async def webhook(request: Request):
-    payload = await request.json()
-
-    print(f"Received webhook payload: {payload}")
-
-    return {"status": "received"}
+async def webhook(payload: AlertmanagerWebhook):
+    logger.info(f"Received {len(payload.alerts)} alert(s) from Alertmanager")
+    handle_webhook(payload)
+    return {"status": "received", "alerts": len(payload.alerts)}
