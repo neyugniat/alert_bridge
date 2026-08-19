@@ -1,6 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
-from app.api.webhook import router
+from app.api.webhook import router as webhook_router
 from app.api.dashboard import router as dashboard_router
 
 app = FastAPI(
@@ -8,7 +8,7 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.include_router(router, prefix="/api")
+app.include_router(webhook_router, prefix="/api")
 app.include_router(dashboard_router)
 
 

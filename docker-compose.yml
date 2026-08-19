@@ -1,12 +1,10 @@
 services:
   alert-bridge:
     build: .
-    ports:
-      - "9999:9999"
+    expose:
+      - "9999"
     env_file:
       - .env
-    volumes:
-      - ./config/routing.yml:/app/config/routing.yml
     restart: unless-stopped
   
   nginx:
